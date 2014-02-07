@@ -95,6 +95,17 @@
         return false;
       }
 
+      // Copy nodelist to an array
+      var allIntroStepsArr = [];
+      for(var i = allIntroSteps.length; i--; allIntroStepsArr.unshift(allIntroSteps[i]));
+
+      // Remove item that is not in visible range
+      for(index=0;index<allIntroStepsArr.length; ++index){
+        if(!_elementInViewport(allIntroStepsArr[index])) {
+          allIntroStepsArr.splice(index, 1);
+        }
+      }
+
       //first add intro items with data-step
       for (var i = 0, elmsLength = allIntroSteps.length; i < elmsLength; i++) {
         var currentElement = allIntroSteps[i];
@@ -700,7 +711,7 @@
       rect.left >= 0 &&
       (rect.bottom+80) <= window.innerHeight && // add 80 to get the text right
       rect.right <= window.innerWidth
-    );
+    ) && (el.offsetWidth > 0 || el.offsetHeight > 0);
   }
 
   /**
