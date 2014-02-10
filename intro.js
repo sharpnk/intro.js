@@ -110,8 +110,8 @@
       }
 
       //first add intro items with data-step
-      for (var i = 0, elmsLength = allIntroSteps.length; i < elmsLength; i++) {
-        var currentElement = allIntroSteps[i];
+      for (var i = 0, elmsLength = allIntroStepsArr.length; i < elmsLength; i++) {
+        var currentElement = allIntroStepsArr[i];
         var step = parseInt(currentElement.getAttribute('data-step'), 10);
 
         if (step > 0) {
@@ -128,8 +128,8 @@
       //next add intro items without data-step
       //todo: we need a cleanup here, two loops are redundant
       var nextStep = 0;
-      for (var i = 0, elmsLength = allIntroSteps.length; i < elmsLength; i++) {
-        var currentElement = allIntroSteps[i];
+      for (var i = 0, elmsLength = allIntroStepsArr.length; i < elmsLength; i++) {
+        var currentElement = allIntroStepsArr[i];
 
         if (currentElement.getAttribute('data-step') == null) {
 
