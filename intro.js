@@ -1,5 +1,5 @@
 /**
- * Intro.js v0.6.0
+ * Intro.js v0.7.0
  * https://github.com/usablica/intro.js
  * MIT licensed
  *
@@ -19,7 +19,7 @@
   }
 } (this, function (exports) {
   //Default config/variables
-  var VERSION = '0.6.0';
+  var VERSION = '0.7.0';
 
   /**
    * IntroJs main class
@@ -76,15 +76,18 @@
       var allIntroSteps = [];
 
       for (var i = 0, stepsLength = this._options.steps.length; i < stepsLength; i++) {
-        var currentItem = this._options.steps[i];
+        var currentItem = _cloneObject(this._options.steps[i]);
         //set the step
-        currentItem.step = i + 1;
+        currentItem.step = introItems.length + 1;
         //use querySelector function only when developer used CSS selector
         if (typeof(currentItem.element) === 'string') {
           //grab the element with given selector from the page
           currentItem.element = document.querySelector(currentItem.element);
         }
-        introItems.push(currentItem);
+
+        if (currentItem.element != null) {
+          introItems.push(currentItem);
+        }
       }
 
     } else {
@@ -116,7 +119,7 @@
             element: currentElement,
             intro: currentElement.getAttribute('data-intro'),
             step: parseInt(currentElement.getAttribute('data-step'), 10),
-	    tooltipClass: currentElement.getAttribute('data-tooltipClass'),
+            tooltipClass: currentElement.getAttribute('data-tooltipClass'),
             position: currentElement.getAttribute('data-position') || this._options.tooltipPosition
           };
         }
@@ -142,7 +145,7 @@
             element: currentElement,
             intro: currentElement.getAttribute('data-intro'),
             step: nextStep + 1,
-	    tooltipClass: currentElement.getAttribute('data-tooltipClass'),
+            tooltipClass: currentElement.getAttribute('data-tooltipClass'),
             position: currentElement.getAttribute('data-position') || this._options.tooltipPosition
           };
         }
@@ -217,6 +220,21 @@
     return false;
   }
 
+ /*
+   * makes a copy of the object
+   * @api private
+   * @method _cloneObject
+  */
+  function _cloneObject(object) {
+      if (object == null || typeof (object) != 'object' || object.hasOwnProperty("nodeName") === true) {
+          return object;
+      }
+      var temp = {};
+      for (var key in object) {
+          temp[key] = _cloneObject(object[key]);
+      }
+      return temp;
+  }
   /**
    * Go to specific step of introduction
    *
@@ -291,6 +309,10 @@
   function _exitIntro(targetElement) {
     //remove overlay layer from the page
     var overlayLayer = targetElement.querySelector('.introjs-overlay');
+    //return if intro already completed or skipped
+    if (overlayLayer == null) {
+      return;
+    }
     //for fade-out animation
     overlayLayer.style.opacity = 0;
     setTimeout(function () {
@@ -628,10 +650,14 @@
     while (parentElm != null) {
       if (parentElm.tagName.toLowerCase() === 'body') break;
 
+      //fix The Stacking Contenxt problem. 
+      //More detail: https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context
       var zIndex = _getPropValue(parentElm, 'z-index');
-      if (/[0-9]+/.test(zIndex)) {
+      var opacity = parseFloat(_getPropValue(parentElm, 'opacity'));
+      if (/[0-9]+/.test(zIndex) || opacity < 1) {
         parentElm.className += ' introjs-fixParent';
       }
+	  
       parentElm = parentElm.parentNode;
     }
 
@@ -649,6 +675,10 @@
       } else {
         window.scrollBy(0, bottom + 100); // 70px + 30px padding from edge to look nice
       }
+    }
+    
+    if (typeof (this._introAfterChangeCallback) !== 'undefined') {
+        this._introAfterChangeCallback.call(this, targetElement.element);
     }
   }
 
@@ -859,6 +889,14 @@
       _goToStep.call(this, step);
       return this;
     },
+    nextStep: function() {
+      _nextStep.call(this);
+      return this;
+    },
+    previousStep: function() {
+      _previousStep.call(this);
+      return this;
+    },
     exit: function() {
       _exitIntro.call(this, this._targetElement);
     },
@@ -879,6 +917,14 @@
         this._introChangeCallback = providedCallback;
       } else {
         throw new Error('Provided callback for onchange was not a function.');
+      }
+      return this;
+    },
+    onafterchange: function(providedCallback) {
+      if (typeof (providedCallback) === 'function') {
+        this._introAfterChangeCallback = providedCallback;
+      } else {
+        throw new Error('Provided callback for onafterchange was not a function');
       }
       return this;
     },
